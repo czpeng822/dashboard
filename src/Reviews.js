@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from '@mui/material/Link';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -7,45 +7,43 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Title from './Title';
 import Papa from 'papaparse';
-
+import files from './amazon_appliances_reviews.csv';
 
 function createData(reviewerID, asin, reviewerName, helpful, reviewText, overall, summary, unixReviewTime, reviewTime) {
   return { reviewerID, asin, reviewerName, helpful, reviewText, overall, summary, unixReviewTime, reviewTime };
 }
 
-const rows = [];
-Papa.parse('./amazon_appliances_reviews.csv', {
-  header: true,
-  newline:'\n',
-  preview: 10 ,
-  dynamicTyping: false,
-  complete: function(results) {
-      const parsedData = results.data;
-      let count = 0;
-      parsedData.forEach(row => {
-              const rowData = createData(
-                row.reviewerID,
-                row.asin,
-                row.reviewerName,
-                row.helpful,
-                row.reviewText,
-                row.overall,
-                row.summary,
-                row.unixReviewTime,
-                row.reviewTime
-            );
-            rows.push(rowData);
-            count++;
-      });
-      console.log(rows); 
-  }
-});
-
-function preventDefault(event) {
-  event.preventDefault();
-}
-
 export default function Reviews() {
+  const [rows, setRows] = useState([]);
+
+  useEffect(() => {
+    Papa.parse(files, {
+      header: true,
+      download: true,
+      preview: 10 ,
+      dynamicTyping: true,
+      complete: function(results) {
+        const parsedData = results.data;
+        const rowsData = parsedData.map(row => createData(
+          row.reviewerID,
+          row.asin,
+          row.reviewerName,
+          row.helpful,
+          row.reviewText,
+          row.overall,
+          row.summary,
+          row.unixReviewTime,
+          row.reviewTime
+        ));
+        setRows(rowsData);
+      }
+    });
+  }, []);
+
+  function preventDefault(event) {
+    event.preventDefault();
+  }
+  
   return (
     <React.Fragment>
       <Title>Appliances Reviews</Title>
@@ -64,8 +62,8 @@ export default function Reviews() {
           </TableRow>
         </TableHead>
         <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.reviewerID}>
+          {rows.map((row, index)=> (
+            <TableRow key={index}>
               <TableCell>{row.reviewerID}</TableCell>
               <TableCell>{row.asin}</TableCell>
               <TableCell>{row.reviewerName}</TableCell>
@@ -76,7 +74,8 @@ export default function Reviews() {
               <TableCell>{row.unixReviewTime}</TableCell>
               <TableCell align="right">{row.reviewTime}</TableCell>
             </TableRow>
-          ))}
+          ),
+          )}
         </TableBody>
       </Table>
       <Link color="primary" href="#" onClick={preventDefault} sx={{ mt: 3 }}>
@@ -85,4 +84,3 @@ export default function Reviews() {
     </React.Fragment>
   );
 }
-								
